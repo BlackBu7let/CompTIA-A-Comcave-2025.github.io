@@ -632,7 +632,7 @@ function loadQuestion() {
     }, 1000);
 
     const q = questions[currentQuestion];
-    document.getElementById('question').textContent = q.q;
+    document.getElementById('question').innerHTML = `<span style="font-size:1rem;opacity:.8;">Frage ${currentQuestion+1} von ${questions.length}</span><br><br>${q.q}`;
     document.getElementById('options').innerHTML = q.opts.map((opt, idx) =>
         `<div class="option ${['red', 'blue', 'yellow', 'green'][idx % 4]}" onclick="checkAnswer('${opt}')">${opt}</div>`
     ).join('');
