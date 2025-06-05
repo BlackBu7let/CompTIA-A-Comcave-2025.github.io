@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CompTIA A+ 2025 ComCave</title>
+    <title>CompTIA A+ 2025 Quiz</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
     <style>
         body {
@@ -101,6 +101,15 @@
             gap: 20px;
             margin-top: 32px;
             margin-bottom: 24px;
+            width: 100%;
+        }
+        .export-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            width: 100%;
         }
         button, .start-btn {
             background: #1368ce;
@@ -116,6 +125,14 @@
         }
         button:hover, .start-btn:hover {
             background: #26890c;
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 1.05rem;
+            border-radius: 6px;
+            border: none;
+            outline: none;
+            margin: 0 0 2px 0;
         }
         #result {
             max-width: 760px;
@@ -164,14 +181,33 @@
             text-decoration: underline;
             margin-right: 0.8em;
         }
-        .creator {
-            text-align: center;
+        .creator-fixed {
+            position: fixed;
+            left: 20px;
+            bottom: 16px;
             color: #d7d4eb;
-            margin: 42px 0 18px 0;
             font-size: 1.06rem;
             letter-spacing: 1px;
-            opacity: 0.82;
+            opacity: 0.88;
             font-style: italic;
+            z-index: 100;
+            background: none;
+        }
+        #musicCtrl {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 2222;
+            background: rgba(70,23,143,0.75);
+            padding: 10px 18px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            user-select: none;
         }
         @media (max-width: 800px) {
             .review-block, #result { max-width: 98vw; }
@@ -179,12 +215,60 @@
             #question { font-size: 1.1rem; max-width: 99vw; }
             .quiz-title { font-size: 1.35rem; }
             #options { flex-direction: column; gap: 10px; }
+            .creator-fixed { font-size: 0.95rem; left: 2vw; bottom: 2vw; }
         }
     </style>
 </head>
 <body>
+    <!-- Hintergrundmusik: Quiz Show Background Music Loop by Alexander Blu -->
+    <audio id="bgmusic" loop preload="auto">
+      <source src="https://www.orangefreesounds.com/wp-content/uploads/2021/12/Quiz-show-background-music-loop.mp3" type="audio/mpeg">
+      Dein Browser unterstützt kein HTML5-Audio.
+    </audio>
+    <div id="musicCtrl">
+      <span id="musicIcon" style="font-size:1.3em;">🎵</span>
+      <span id="musicStatus">Musik: Aus</span>
+    </div>
+    <script>
+      const audio = document.getElementById('bgmusic');
+      const ctrl = document.getElementById('musicCtrl');
+      const status = document.getElementById('musicStatus');
+      let playing = false;
+
+      audio.onerror = function() {
+        status.textContent = "Musik: Fehler";
+        ctrl.style.opacity = 0.7;
+      };
+
+      ctrl.onclick = function() {
+        if (playing) {
+          audio.pause();
+          status.textContent = "Musik: Aus";
+        } else {
+          audio.play().then(() => {
+            status.textContent = "Musik: An";
+          }).catch(e => {
+            status.textContent = "Musik nicht erlaubt";
+          });
+        }
+        playing = !playing;
+      };
+
+      // Wird in startQuiz() aufgerufen, um bei Quizstart Musik abzuspielen
+      function playMusicOnce() {
+        if (!playing) {
+          audio.play().then(() => {
+            status.textContent = "Musik: An";
+            playing = true;
+          }).catch(e => {
+            status.textContent = "Musik nicht erlaubt";
+          });
+        }
+      }
+    </script>
+
     <div id="startScreen" class="start-screen">
-        <h1 class="start-title">CompTIA A+ 2025 Comcave</h1>
+        <h1 class="start-title">CompTIA A+ 2025 Quiz</h1>
         <div class="start-desc">
             Teste dein Wissen mit typischen Fragen zur CompTIA A+ (Core 1 & 2 & ältere).<br>
             Du hast <b>30 Sekunden</b> pro Frage.<br>
@@ -192,7 +276,7 @@
         </div>
         <button class="start-btn" onclick="startQuiz()">Starten</button>
     </div>
-    <div class="quiz-title" style="display:none;" id="quizTitle">CompTIA A+ 2025 ComCave</div>
+    <div class="quiz-title" style="display:none;" id="quizTitle">CompTIA A+ 2025 Quiz</div>
     <div class="quiz-container" style="display:none;">
         <h2 id="question"></h2>
         <div id="options"></div>
@@ -206,12 +290,19 @@
         <a href="https://www.comptia.org/training/resources/practice-tests/comptia-a-1101-practice-questions" target="_blank">A+ 220-1001</a> |
         <a href="https://www.comptia.org/training/resources/practice-tests/comptia-a-1102-practice-questions" target="_blank">A+ 220-1002</a>
     </div>
-    <div class="creator">
+    <div class="creator-fixed">
         Erstellt von Lucas Pakutka
     </div>
     <script>
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
         const questions = [
-  {
+   {
     q: "Welche Technologie eignet sich am besten, um ein Gerät drahtlos mit einem Lautsprecher zu verbinden?",
     opts: ["Wi-Fi", "NFC", "5G", "Bluetooth"],
     ans: "Bluetooth"
@@ -592,265 +683,456 @@
     ans: "HTTPS"
 },
 {
+    q: "Welches Medium verfügt über die höchste Speicherkapazität?",
+    opts: ["ADVD-DL", "BCD-RW", "CCD-R", "DDVD-R"],
+    ans: "DDVD-R"
+},
+{
+    q: "Blu-ray-Discs haben folgende Kapazität:",
+    opts: ["4,7 GB", "9 GB", "25 GB", "85 GB"],
+    ans: "25 GB"
+},
+{
+    q: "Welches der folgenden Medien wird auch mit Solid State bezeichnet?",
+    opts: ["Bandlaufwerk", "DVD", "Flash-Card", "LS-120"],
+    ans: "Flash-Card"
+},
+{
+    q: "Was wird als optisches Medium bezeichnet?",
+    opts: ["Floppy", "Blu-ray", "SSD", "Bandlaufwerk"],
+    ans: "Blu-ray"
+},
+{
+    q: "Sie möchten eine SSD in Ihr Notebook einbauen, aber der SATA-Steckplatz ist bereits belegt. Was kann allenfalls alternativ noch vorhanden sein für Ihr Anliegen?",
+    opts: ["Interner USB-Anschluss", "Ein RAID-Anschluss", "Eine .M2-Schnittstelle", "Nichts, Sie können keine SSD mehr einbauen"],
+    ans: "Eine .M2-Schnittstelle"
+},
+{
+    q: "Welches der folgenden Speichermedien bietet die höchste Stoßfestigkeit?",
+    opts: ["NAS-HDD", "Flash Card", "SATA-HDD", "SSD"],
+    ans: "SSD"
+},
+{
+    q: "Welches der folgenden Speichermedien hat eine Kapazität von 8,5 GB?",
+    opts: ["CD-RW", "DL DVD", "Blu-ray", "DVD"],
+    ans: "DL DVD"
+},
+{
+    q: "Was überbietet eine 15.000-rpm-SAS-Festplatte in Sachen Lesegeschwindigkeit am ehesten?",
+    opts: ["Compact Flash", "SSD", "Tape", "SD"],
+    ans: "SSD"
+},
+{
+    q: "Welcher Anschluss wird durch einen männlichen 9- oder 25-Pin-Stecker an der Rückseite eines Notebooks beschrieben?",
+    opts: ["Parallele Schnittstelle", "Serielle Schnittstelle", "IEEE 1394-Schnittstelle", "USB 3.0-Anschluss"],
+    ans: "Serielle Schnittstelle"
+},
+{
+    q: "Was ist die empfohlene Maximallänge eines internen SATA-Kabels?",
+    opts: ["45 cm", "60 cm", "100 cm", "300 cm"],
+    ans: "100 cm"
+},
+{
+    q: "Welche Schnittstelle unterstützt nur ein (1) Gerät pro Anschluss?",
+    opts: ["RS-232", "USB 1.1", "SAS", "SATA 3,0 Gbit/s"],
+    ans: "SATA 3,0 Gbit/s"
+},
+{
+    q: "Welcher Standard wird verwendet, um die Anzahl Ladegeräte und -anschlüsse für mobile Geräte deutlich zu reduzieren?",
+    opts: ["RS-232", "USB-C", "SATA", "Thunderbolt 4"],
+    ans: "USB-C"
+},
+{
+    q: "Sie möchten eine neue externe Disk an Ihr System anschließen. Dafür verwenden Sie einen USB 3.2 Gen 2x2-Anschluss. Welche maximalen Datenraten erlaubt dies?",
+    opts: ["20 Gbps", "10 Gbps", "5 Gbps", "1 Gbps"],
+    ans: "20 Gbps"
+},
+{
+    q: "Ein Mainboard verfügt über einen AM4-Sockel. Welcher Prozessor passt in diesen Sockel?",
+    opts: ["AMD Phenom", "AMD Ryzen", "Intel Xeon", "Intel Core i7"],
+    ans: "AMD Ryzen"
+},
+{
+    q: "Auf welcher Form der Datenübertragung basiert PCI-Express?",
+    opts: ["Parallele Datenübertragung", "USB 2.0", "Serielle Punkt-zu-Punkt-Verbindung", "Interner PCI-Bus"],
+    ans: "Serielle Punkt-zu-Punkt-Verbindung"
+},
+{
+    q: "Welche Funktion macht die Installation einer CPU einfacher?",
+    opts: ["Plug and Play", "Niedrigere Latenzen", "Zero Insertion Force", "Kühlkörper"],
+    ans: "Zero Insertion Force"
+},
+{
+    q: "Welches der folgenden RAM-Module weist 260 Pins auf?",
+    opts: ["DDR1-SDRAM", "SO-DIMM", "DDR3-SDRAM", "SDR-DRAM"],
+    ans: "SO-DIMM"
+},
+{
+    q: "Die maximale Datenübertragungsrate von PCI 4.0 beträgt",
+    opts: ["1324 GB/s", "8 GB/s", "15,76 GB/s", "31,51 GB/s"],
+    ans: "31,51 GB/s"
+},
+{
+    q: "Welcher RAM-Typ kann die Spezifikation PC3-10500 aufweisen?",
+    opts: ["DDR2", "RDRAM", "SDRAM3", "DDR3"],
+    ans: "DDR3"
+},
+{
+    q: "Welcher Display-Typ benötigt zur Darstellung eine Hintergrundbeleuchtung?",
+    opts: ["LCD", "LED", "CRT", "Plasma"],
+    ans: "LCD"
+},
+{
+    q: "Welche Schnittstellen werden normalerweise von einem KVM-Switch unterstützt?",
+    opts: ["PS/2, VGA, USB", "DB25, DB9, PS/2", "PS/2, DB9, USB", "PS/2, VGA, DB25"],
+    ans: "PS/2, VGA, USB"
+},
+{
+    q: "Welche der folgenden Methoden nutzen Sie für gewöhnlich zur biometrischen Authentifikation?",
+    opts: ["Passwort", "Verschlüsseltes Passwort", "RFID-SmartCard", "Fingerabdrucklesegerät"],
+    ans: "Fingerabdrucklesegerät"
+},
+{
+    q: "Welche Methode zum Eingeben von Daten erfordert die Authentifizierung des Benutzers mit einem Körperteil?",
+    opts: ["Biologie", "Biometrie", "Autopsie", "Autometrie"],
+    ans: "Biometrie"
+},
+{
+    q: "Welches Gerät kann ein PAL-Signal einer externen Quelle decodieren?",
+    opts: ["TV-Tuner-Karte", "Grafikkarte", "Videoschnittkarte", "Soundkarte"],
+    ans: "TV-Tuner-Karte"
+},
+{
+    q: "Welche Komponente muss bei intervallmäßigen Wartungsarbeiten an einem Laserdrucker ersetzt werden?",
+    opts: ["Laderolle", "Scannerspiegel", "Trommeleinheit", "Tintenrestbehälter"],
+    ans: "Trommeleinheit"
+},
+{
+    q: "Welchen Druckertyp werden Sie für den Einsatz von mehrteiligen Formularen mit Durchschlag einsetzen?",
+    opts: ["Einen Nadeldrucker", "Einen Thermoprinter", "Einen Tintenstrahldrucker", "Einen Laserdrucker"],
+    ans: "Einen Nadeldrucker"
+},
+{
+    q: "Wenn Sie einen Laserdrucker wegen eines Papierstaus öffnen, was trifft in diesem Moment zu?",
+    opts: ["Der Laser ist heiß.", "Der Druckerspooler verliert alle Aufträge.", "Die Fixiereinheit ist heiß.", "Die Tonerkassette kann verrutschen."],
+    ans: "Die Fixiereinheit ist heiß."
+},
+{
+    q: "Ein Kunde meldet sich beim Techniker, weil sein Tintenstrahldrucker nicht mehr so klar wie bisher druckt. Wie kann der Techniker als Erstes versuchen, das Problem zu lösen?",
+    opts: ["Tintenpatronen ersetzen", "Drucker kalibrieren", "Anderes Papier benutzen", "USB-Kabel ersetzen"],
+    ans: "Drucker kalibrieren"
+},
+{
+    q: "Wie wird bei einem Laserdrucker der Prozess des Fixierens von Toner auf das Papier genannt?",
+    opts: ["Bonding", "Transferring", "Duplexing", "Fusing"],
+    ans: "Fusing"
+},
+{
+    q: "Welches Bauteil eines Laserdruckers bringt mithilfe von Hitze den Toner auf das Papier auf?",
+    opts: ["Fixiereinheit", "Aufnahmerollen", "Papiertransferwalze", "Bildtrommel"],
+    ans: "Fixiereinheit"
+},
+{
+    q: "Was ist der hauptsächliche Grund dafür, dass Drucker von Zeit zu Zeit automatisch gereinigt werden?",
+    opts: ["Längere Lebenszeit der Toner", "Entfernung von Tonerrückstanden", "Längere Lebenszeit des Druckers", "Schnellerer Druck"],
+    ans: "Entfernung von Tonerrückstanden"
+},
+{
+    q: "Wozu ist der 110/220-V-Umschalter an der Geräterückseite zuständig?",
+    opts: ["Übertaktung für Spiele", "Lüftergeschwindigkeit", "Länderanpassung", "Computersperre"],
+    ans: "Länderanpassung"
+},
+{
+    q: "Ein Techniker nimmt einen Umbau in einem Computer vor, hat jedoch kein ESD-Armband zur Verfügung. Wie kann er sich am besten vor statischer Aufladung schützen?",
+    opts: ["Das Metallgehäuse des Computers halten", "Das Stromkabel halten", "Die Schuhe ausziehen", "Den PC vom Strom nehmen"],
+    ans: "Das Metallgehäuse des Computers halten"
+},
+{
+    q: "Sie möchten die Datensicherheit auf Ihrem System erhöhen und konfigurieren darum die zwei vorhandenen Disks mit RAID. Welchen RAID-Level werden Sie unter diesen Anforderungen wählen?",
+    opts: ["Level 0", "Level 1", "Level 5", "Level 10"],
+    ans: "Level 1"
+},
+{
+    q: "Sie möchten in Ihrem System mehr Arbeitsspeicher einsetzen. Auf dem bisherigen Speicher steht DDR4-3200. Welchen Speicherriegel nehmen Sie zur Aufrüstung?",
+    opts: ["DDR4-3200", "DDR3-4800", "PC3-6400", "PC4-25600"],
+    ans: "DDR4-3200"
+},
+{
+    q: "Was kann in einem Notebook normalerweise nicht aufgerüstet werden?",
+    opts: ["Grafikkarte", "Festplatte", "Arbeitsspeicher", "Wireless-Karte"],
+    ans: "Grafikkarte"
+},
+{
+    q: "Der Akku eines Laptops wird bei angeschlossenem Ladekabel nicht aufgeladen. Was ist vermutlich defekt?",
+    opts: ["DC-in-Stecker", "Festplatte", "Kühlsystem", "Batterie"],
+    ans: "Batterie"
+},
+{
+    q: "Ein Benutzer möchte einen Paralleldrucker für sein Notebook nutzen. Was benötigt er dazu, wenn das Notebook keinen solchen Anschluss mehr hat?",
+    opts: ["Splitter", "Portreplikator", "Wireless-Router", "Parallel-USB-Kabel"],
+    ans: "Parallel-USB-Kabel"
+},
+{
+    q: "Was kann in einem Laptop nur im ausgeschalteten Zustand, und wenn alle Stromquellen getrennt sind, installiert werden?",
+    opts: ["PCMCIA-Geräte", "Express Card 54-Geräte", "SODIMM-Chip", "USB-Hub"],
+    ans: "SODIMM-Chip"
+},
+{
+    q: "Was verspricht einem Laptopbenutzer einen schnellen Systemstart?",
+    opts: ["Viel Arbeitsspeicher", "Akku mit hoher Kapazität", "eSATA-Festplatte", "Solid State Drive"],
+    ans: "Solid State Drive"
+},
+{
+    q: "Welchen Druckertyp werden Sie für den Druck von Ersatzteilen auswählen?",
+    opts: ["Einen 3D-Drucker", "Einen Thermoprinter", "Einen Tintenstrahldrucker", "Einen Laserdrucker"],
+    ans: "Einen 3D-Drucker"
+},
+{
+    q: "Wenn Sie einen Laserdrucker wegen eines Papierstaus öffnen, werden Sie welches Bauteil nicht berühren?",
+    opts: ["Den Papiereinzug", "Die Fixiereinheit", "Die Tonerkassette", "Die Trommeleinheit"],
+    ans: "Die Fixiereinheit"
+},
+{
+    q: "Was für einen Anschluss suchen Sie in der Systemsteuerung, wenn Sie bei einem Drucker den Netzwerkanschluss überprüfen möchten?",
+    opts: ["USBDot001", "LPT002", "File-Port", "WSD-Port"],
+    ans: "WSD-Port"
+},
+{
+    q: "Ein Kunde meldet sich beim Techniker, weil sein Tintenstrahldrucker nicht mehr druckt. Die Meldung lautet »Replace Waste-Tank«. Was tut er?",
+    opts: ["Tintenrestbehälter austauschen", "Tintentanks ersetzen", "Intensivreinigung durchführen", "Den Drucker ersetzen"],
+    ans: "Tintenrestbehälter austauschen"
+},
+{
+    q: "Ihr Laserdrucker zieht einen feinen Streifen über das Papier, der schwarz ist. Was können Sie tun?",
+    opts: ["Toner wechseln", "Coronadraht reinigen", "Papier muss anders beschaffen sein", "Trommeleinheit ersetzen"],
+    ans: "Coronadraht reinigen"
+},
+{
+    q: "Sie benötigen Ersatzmaterial für Ihren 3D-Drucker. Das bisherige Material haben Sie in Flaschen eingekauft. Welches Filament haben Sie benutzt?",
+    opts: ["ABS", "PLA", "Resin", "3D-Tinte"],
+    ans: "Resin"
+},
+{
     q: "Welcher digitale Übertragungsdienst kann über bestehende (alte) Kupferleitungen betrieben werden und ist der Vorgänger der xDSL-Übertragungsdienste?",
     opts: ["Ethernet", "ISDN", "Analoge Telefone", "Kabel TV"],
     ans: "ISDN"
 }
+        ];
 
+        let currentQuestion = 0, score = 0, timerInterval;
+        let userAnswers = [];
 
+        function startQuiz() {
+            playMusicOnce();
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('quizTitle').style.display = '';
+            document.querySelector('.quiz-container').style.display = '';
+            document.getElementById('result').innerHTML = '';
+            currentQuestion = 0;
+            score = 0;
+            userAnswers = [];
+            shuffleArray(questions);
+            loadQuestion();
+            window.scrollTo(0,0);
+        }
 
-];
+        function loadQuestion() {
+            clearInterval(timerInterval);
+            let timeLeft = 30;
+            document.getElementById('timer').textContent = `Zeit: ${timeLeft}`;
+            window.scrollTo(0, 0);
 
-let currentQuestion = 0, score = 0, timerInterval;
-let userAnswers = [];
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = `Zeit: ${timeLeft}`;
+                if (timeLeft <= 0) {
+                    userAnswers.push(null);
+                    nextQuestion();
+                }
+            }, 1000);
 
-function startQuiz() {
-    document.getElementById('startScreen').style.display = 'none';
-    document.getElementById('quizTitle').style.display = '';
-    document.querySelector('.quiz-container').style.display = '';
-    document.getElementById('result').innerHTML = '';
-    currentQuestion = 0;
-    score = 0;
-    userAnswers = [];
-    loadQuestion();
-    window.scrollTo(0,0);
-}
+            const q = questions[currentQuestion];
+            let shuffledOpts = [...q.opts];
+            shuffleArray(shuffledOpts);
 
-function loadQuestion() {
-    clearInterval(timerInterval);
-    let timeLeft = 30;
-    document.getElementById('timer').textContent = `Zeit: ${timeLeft}`;
-    window.scrollTo(0, 0);
+            document.getElementById('question').innerHTML = 
+                `<span style="font-size:1rem;opacity:.8;">Frage ${currentQuestion+1} von ${questions.length}</span><br><br>${q.q}`;
+            document.getElementById('options').innerHTML = shuffledOpts.map((opt, idx) =>
+                `<div class="option ${['red','blue','yellow','green'][idx % 4]}" onclick="checkAnswer('${opt}')">${opt}</div>`
+            ).join('');
+        }
 
-    timerInterval = setInterval(() => {
-        timeLeft--;
-        document.getElementById('timer').textContent = `Zeit: ${timeLeft}`;
-        if(timeLeft <= 0) {
-            userAnswers.push(null);
+        function checkAnswer(opt) {
+            userAnswers.push(opt);
+            if (opt === questions[currentQuestion].ans) score++;
             nextQuestion();
         }
-    }, 1000);
 
-    const q = questions[currentQuestion];
-    document.getElementById('question').innerHTML = `<span style="font-size:1rem;opacity:.8;">Frage ${currentQuestion+1} von ${questions.length}</span><br><br>${q.q}`;
-    document.getElementById('options').innerHTML = q.opts.map((opt, idx) =>
-        `<div class="option ${['red', 'blue', 'yellow', 'green'][idx % 4]}" onclick="checkAnswer('${opt}')">${opt}</div>`
-    ).join('');
-}
-
-function checkAnswer(opt) {
-    userAnswers.push(opt);
-    if(opt === questions[currentQuestion].ans) score++;
-    nextQuestion();
-}
-
-function nextQuestion() {
-    currentQuestion++;
-    if(currentQuestion < questions.length) loadQuestion();
-    else showResult();
-}
-
-function showResult() {
-    clearInterval(timerInterval);
-    document.querySelector('.quiz-container').style.display = 'none';
-    document.getElementById('quizTitle').style.display = 'none';
-    document.getElementById('result').innerHTML = `
-        <h2 style="text-align:center;">Quiz beendet! Punkte: ${score}/${questions.length}</h2>
-        <div class="btn-row">
-            <button onclick="showReview()">Lösungen anzeigen</button>
-            <button onclick="startQuiz()">Nochmal spielen</button>
-        </div>
-        <div id="exportArea"></div>
-    `;
-    renderExportBlock();
-
-    // Animation, falls alles richtig:
-    if (score === questions.length) {
-        let confettiCanvas = document.createElement("canvas");
-        confettiCanvas.id = "confetti";
-        confettiCanvas.style.position = "fixed";
-        confettiCanvas.style.top = 0;
-        confettiCanvas.style.left = 0;
-        confettiCanvas.style.width = "100vw";
-        confettiCanvas.style.height = "100vh";
-        confettiCanvas.style.pointerEvents = "none";
-        confettiCanvas.style.zIndex = 1000;
-        document.body.appendChild(confettiCanvas);
-
-        let congrats = document.createElement("div");
-        congrats.textContent = "Glückwunsch! Alle Fragen richtig!";
-        congrats.style.position = "fixed";
-        congrats.style.top = "35%";
-        congrats.style.left = "50%";
-        congrats.style.transform = "translate(-50%,-50%)";
-        congrats.style.background = "rgba(255,255,255,0.97)";
-        congrats.style.color = "#46178f";
-        congrats.style.fontSize = "2.2rem";
-        congrats.style.fontWeight = "bold";
-        congrats.style.padding = "24px 36px";
-        congrats.style.borderRadius = "18px";
-        congrats.style.zIndex = 1001;
-        congrats.style.boxShadow = "0 6px 48px #0002";
-        document.body.appendChild(congrats);
-
-        let ctx = confettiCanvas.getContext("2d");
-        confettiCanvas.width = window.innerWidth;
-        confettiCanvas.height = window.innerHeight;
-        let confetti = [];
-        let colors = ["#f7c948","#db2b2b","#1368ce","#26890c","#fff85a","#f76a1a","#a57aff"];
-        for(let i=0; i<120; i++) {
-            confetti.push({
-                x: Math.random()*window.innerWidth,
-                y: Math.random()*window.innerHeight-400,
-                r: 7+Math.random()*12,
-                d: 2+Math.random()*6,
-                c: colors[Math.floor(Math.random()*colors.length)],
-                tilt: Math.random()*10-10
-            });
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) loadQuestion();
+            else showResult();
         }
-        let angle = 0;
-        function drawConfetti() {
-            ctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
-            for(let i=0;i<confetti.length;i++) {
-                let p = confetti[i];
-                ctx.beginPath();
-                ctx.ellipse(p.x, p.y, p.r, p.r/2, p.tilt, 0, 2*Math.PI);
-                ctx.fillStyle = p.c;
-                ctx.fill();
-            }
-            updateConfetti();
-        }
-        function updateConfetti() {
-            angle += 0.01;
-            for(let i=0;i<confetti.length;i++) {
-                let p = confetti[i];
-                p.y += p.d + Math.cos(angle + i);
-                p.x += Math.sin(angle) * 2;
-                p.tilt += Math.random()*0.6-0.3;
-                if(p.y > window.innerHeight+20) {
-                    p.y = -10;
-                    p.x = Math.random()*window.innerWidth;
+
+        function showResult() {
+            clearInterval(timerInterval);
+            document.querySelector('.quiz-container').style.display = 'none';
+            document.getElementById('quizTitle').style.display = 'none';
+            document.getElementById('result').innerHTML = `
+                <h2 style="text-align:center;">Quiz beendet! Punkte: ${score}/${questions.length}</h2>
+                <div style="width:100%;display:flex;justify-content:center;">
+                    <div class="btn-row">
+                        <button onclick="showReview()">Lösungen anzeigen</button>
+                        <button onclick="startQuiz()">Nochmal spielen</button>
+                    </div>
+                </div>
+                <div style="width:100%;display:flex;justify-content:center;">
+                    <div class="export-row">
+                        <input type="text" id="userName" placeholder="Dein Name (optional)" maxlength="40">
+                        <button onclick="exportResults()">Ergebnis exportieren</button>
+                    </div>
+                </div>
+            `;
+
+            // Konfetti-Animation, wenn alle Fragen richtig
+            if (score === questions.length) {
+                let confettiCanvas = document.createElement("canvas");
+                confettiCanvas.id = "confetti";
+                confettiCanvas.style.position = "fixed";
+                confettiCanvas.style.top = 0;
+                confettiCanvas.style.left = 0;
+                confettiCanvas.style.width = "100vw";
+                confettiCanvas.style.height = "100vh";
+                confettiCanvas.style.pointerEvents = "none";
+                confettiCanvas.style.zIndex = 1000;
+                document.body.appendChild(confettiCanvas);
+
+                let congrats = document.createElement("div");
+                congrats.textContent = "Glückwunsch! Alle Fragen richtig!";
+                congrats.style.position = "fixed";
+                congrats.style.top = "20px";
+                congrats.style.left = "50%";
+                congrats.style.transform = "translate(-50%,0)";
+                congrats.style.background = "rgba(255,255,255,0.97)";
+                congrats.style.color = "#46178f";
+                congrats.style.fontSize = "2.2rem";
+                congrats.style.fontWeight = "bold";
+                congrats.style.padding = "24px 36px";
+                congrats.style.borderRadius = "18px";
+                congrats.style.zIndex = 1001;
+                congrats.style.boxShadow = "0 6px 48px #0002";
+                document.body.appendChild(congrats);
+
+                let ctx = confettiCanvas.getContext("2d");
+                confettiCanvas.width = window.innerWidth;
+                confettiCanvas.height = window.innerHeight;
+                let confetti = [];
+                let colors = ["#f7c948","#db2b2b","#1368ce","#26890c","#fff85a","#f76a1a","#a57aff"];
+                for (let i = 0; i < 120; i++) {
+                    confetti.push({
+                        x: Math.random() * window.innerWidth,
+                        y: Math.random() * window.innerHeight - 400,
+                        r: 7 + Math.random() * 12,
+                        d: 2 + Math.random() * 6,
+                        c: colors[Math.floor(Math.random() * colors.length)],
+                        tilt: Math.random() * 10 - 10
+                    });
                 }
+                let angle = 0;
+                function drawConfetti() {
+                    ctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+                    for (let i = 0; i < confetti.length; i++) {
+                        let p = confetti[i];
+                        ctx.beginPath();
+                        ctx.ellipse(p.x, p.y, p.r, p.r/2, p.tilt, 0, 2 * Math.PI);
+                        ctx.fillStyle = p.c;
+                        ctx.fill();
+                    }
+                    updateConfetti();
+                }
+                function updateConfetti() {
+                    angle += 0.01;
+                    for (let i = 0; i < confetti.length; i++) {
+                        let p = confetti[i];
+                        p.y += p.d + Math.cos(angle + i);
+                        p.x += Math.sin(angle) * 2;
+                        p.tilt += Math.random() * 0.6 - 0.3;
+                        if (p.y > window.innerHeight + 20) {
+                            p.y = -10;
+                            p.x = Math.random() * window.innerWidth;
+                        }
+                    }
+                }
+                let confettiInterval = setInterval(drawConfetti, 16);
+                setTimeout(() => {
+                    clearInterval(confettiInterval);
+                    if (confettiCanvas) confettiCanvas.remove();
+                    if (congrats) congrats.remove();
+                }, 5000);
             }
+            window.scrollTo(0,0);
         }
-        let confettiInterval = setInterval(drawConfetti, 16);
 
-        setTimeout(()=>{
-            clearInterval(confettiInterval);
-            if(confettiCanvas) confettiCanvas.remove();
-            if(congrats) congrats.remove();
-        }, 5000);
-    }
-
-    window.scrollTo(0,0);
-}
-
-// Exportbereich als eigener Block, damit auch nach showReview() sichtbar
-function renderExportBlock() {
-    document.getElementById("exportArea").innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;margin:40px 0 30px 0;">
-            <input id="exportName" type="text" placeholder="Dein Name (optional)" style="padding:10px 18px;font-size:1.2rem;border-radius:7px;border:none;margin-bottom:15px;width:270px;max-width:90%;">
-            <button onclick="exportResultsHTML()" style="font-size:1.05rem;">Ergebnisse exportieren</button>
-        </div>
-    `;
-}
-
-// Der Export als HTML-Design wie die Lösungsausgabe
-function exportResultsHTML() {
-    let userName = document.getElementById("exportName").value.trim();
-    let html = `
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<title>CompTIA A+ Quiz Ergebnisse</title>
-<style>
-body{background:#faf8ff;font-family:Poppins,sans-serif;color:#2b254a;padding:30px;}
-h2{text-align:center;}
-.result-summary{background:#fff3;margin:0 auto 35px auto;border-radius:9px;padding:18px 24px;max-width:520px;font-size:1.25em;}
-.review-block{background:#fff;color:#222;border-radius:8px;padding:16px 20px;margin-bottom:18px;box-shadow:0 2px 10px #3c237119;max-width:700px;margin-left:auto;margin-right:auto;}
-.review-correct{background:#26890c;color:#fff;padding:6px 16px;border-radius:7px;}
-.review-wrong{background:#db2b2b;color:#fff;padding:6px 16px;border-radius:7px;}
-</style>
-</head>
-<body>
-    <h2>CompTIA A+ Quiz Ergebnisse</h2>
-    <div class="result-summary">
-        ${userName ? `Name: <b>${escapeHTML(userName)}</b><br>` : ""}
-        Gesamtpunktzahl: <b>${score} / ${questions.length}</b>
-    </div>
-`;
-    for(let i = 0; i < questions.length; i++) {
-        let correct = questions[i].ans;
-        let user = userAnswers[i] === null ? "<i>Keine Antwort</i>" : escapeHTML(userAnswers[i]);
-        let block = `<div class="review-block">
-            <b>Frage ${i+1}:</b><br>${escapeHTML(questions[i].q)}<br><br>
-            <b>Deine Antwort:</b> `;
-        if(userAnswers[i] === correct) {
-            block += `<span class="review-correct">${user}</span>`;
-        } else {
-            block += `<span class="review-wrong">${user}</span> <br><b>Korrekt wäre:</b> <span class="review-correct">${escapeHTML(correct)}</span>`;
+        function showReview() {
+            let html = "<h2 style='text-align:center;'>Deine Lösungen:</h2>";
+            for (let i = 0; i < questions.length; i++) {
+                let correct = questions[i].ans;
+                let user = userAnswers[i] === null ? "<i>Keine Antwort</i>" : userAnswers[i];
+                let block = `<div class="review-block">
+                    <b>Frage ${i+1}:</b><br>${questions[i].q}<br><br>
+                    <b>Deine Antwort:</b> `;
+                if (userAnswers[i] === correct) {
+                    block += `<span class="review-correct">${user}</span>`;
+                } else {
+                    block += `<span class="review-wrong">${user}</span><br><b>Korrekt wäre:</b> <span class="review-correct">${correct}</span>`;
+                }
+                block += "</div>";
+                html += block;
+            }
+            html += `
+                <div style="width:100%;display:flex;justify-content:center;">
+                    <div class="btn-row">
+                        <button onclick="startQuiz()">Nochmal spielen</button>
+                    </div>
+                </div>
+                <div style="width:100%;display:flex;justify-content:center;">
+                    <div class="export-row">
+                        <input type="text" id="userName" placeholder="Dein Name (optional)" maxlength="40">
+                        <button onclick="exportResults()">Ergebnis exportieren</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('result').innerHTML = html;
+            window.scrollTo(0,0);
         }
-        block += "</div>";
-        html += block;
-    }
-    html += "</body></html>";
 
-    // Dateiname festlegen
-    let filename = "comptia-a-plus-quiz-ergebnisse";
-    if(userName) {
-        let clean = userName.trim()
-            .replace(/\s+/g,"_")           // Leerzeichen zu _
-            .replace(/[^a-zA-Z0-9_-]/g,"") // alles außer Buchstaben, Ziffern, _ und - entfernen
-            .substring(0,32);              // Max 32 Zeichen für Lesbarkeit
-        if(clean.length > 0) filename += "_" + clean;
-    }
-    filename += ".html";
-
-    let blob = new Blob([html], {type: "text/html"});
-    let a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-}
-
-// Hilfsfunktion zur HTML-Escaping für Nutzereingaben und Fragen/Texte
-function escapeHTML(str) {
-    return (str+"")
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;")
-      .replace(/"/g,"&quot;")
-      .replace(/'/g,"&#039;");
-}
-
-function showReview() {
-    let html = "<h2 style='text-align:center;'>Deine Lösungen:</h2>";
-    for(let i = 0; i < questions.length; i++) {
-        let correct = questions[i].ans;
-        let user = userAnswers[i] === null ? "<i>Keine Antwort</i>" : userAnswers[i];
-        let block = `<div class="review-block">
-            <b>Frage ${i+1}:</b><br>${questions[i].q}<br><br>
-            <b>Deine Antwort:</b> `;
-        if(userAnswers[i] === correct) {
-            block += `<span class="review-correct">${user}</span>`;
-        } else {
-            block += `<span class="review-wrong">${user}</span> <br><b>Korrekt wäre:</b> <span class="review-correct">${correct}</span>`;
+        function exportResults() {
+            let name = document.getElementById('userName') ? document.getElementById('userName').value.trim() : '';
+            let html = `<h2 style='text-align:center;'>CompTIA A+ 2025 Quiz Ergebnisse${name ? " von " + name : ""}</h2>`;
+            html += `<p style='text-align:center;'><b>Punkte:</b> ${score} / ${questions.length}</p>`;
+            for (let i = 0; i < questions.length; i++) {
+                let correct = questions[i].ans;
+                let user = userAnswers[i] === null ? "<i>Keine Antwort</i>" : userAnswers[i];
+                let block = `<div style="background:#fff;color:#222;border-radius:8px;padding:16px 20px;margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,0.08);max-width:700px;margin-left:auto;margin-right:auto;">
+                    <b>Frage ${i+1}:</b><br>${questions[i].q}<br><br>
+                    <b>Deine Antwort:</b> `;
+                if (userAnswers[i] === correct) {
+                    block += `<span style="background:#26890c;color:#fff;padding:6px 16px;border-radius:7px;">${user}</span>`;
+                } else {
+                    block += `<span style="background:#db2b2b;color:#fff;padding:6px 16px;border-radius:7px;">${user}</span><br><b>Korrekt wäre:</b> <span style="background:#26890c;color:#fff;padding:6px 16px;border-radius:7px;">${correct}</span>`;
+                }
+                block += "</div>";
+                html += block;
+            }
+            let blob = new Blob([`<html><head><meta charset="utf-8"><title>Quiz Ergebnisse</title></head><body style="font-family:sans-serif;background:#f8f8fa;padding:16px;">${html}</body></html>`], { type: "text/html" });
+            let filename = `Quiz_Ergebnis${name ? "_" + name.replace(/[^a-z0-9äöüÄÖÜß]/gi, "_") : ""}.html`;
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => { document.body.removeChild(link); }, 500);
         }
-        block += "</div>";
-        html += block;
-    }
-    html += `<div class="btn-row">
-        <button onclick="startQuiz()">Nochmal spielen</button>
-    </div>
-    <div id="exportArea"></div>
-    `;
-    document.getElementById('result').innerHTML = html;
-    renderExportBlock();
-    window.scrollTo(0,0);
-}
-</script>
+    </script>
 </body>
 </html>
